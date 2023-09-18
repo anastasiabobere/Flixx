@@ -1,5 +1,15 @@
 const global={
-    currentPage:window.location.pathname
+    currentPage:window.location.pathname,
+    search:{
+      term:"",
+      type:"",
+      page:1,
+      totalPages:1
+    },
+    api:{
+      apiKey:"f33c372d03fa3e9a5482dd1a2eebf657",
+      apiURL:"https://api.themoviedb.org/3/"
+    }
 }
 
 // Display 20 most popular movies
@@ -213,8 +223,8 @@ function displayBackgroundImage(type, backgroundPath){
 
 //Fetch data from TMDB api
 async function fetchAPIData(endpoint){
-const API_KEY="f33c372d03fa3e9a5482dd1a2eebf657";
-const API_URL="https://api.themoviedb.org/3/";
+const API_KEY=global.api.apiKey;
+const API_URL=global.api.apiURL;
 
 showSpinner();
 
@@ -224,7 +234,20 @@ const data = await res.json();
 hideSpinner();
 return data;
 };
-
+//Make rewuest to search
+async function searchAPIData(){
+  const API_KEY=global.api.apiKey;
+  const API_URL=global.api.apiURL;
+  
+  showSpinner();
+  
+  const res= await fetch(`${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`
+  );
+  const data = await res.json();
+  
+  hideSpinner();
+  return data;
+  };
 function showSpinner(){
 document.querySelector(".spinner").classList.add("show")
 }
@@ -232,6 +255,22 @@ function hideSpinner(){
 document.querySelector(".spinner").classList.remove("show")
 }
 
+//search
+async function search(){
+  const queryString= window.location.search;
+ const urlParam= new URLSearchParams(queryString);
+
+global.search.type= urlParam.get("type");
+global.search.term= urlParam.get("search-term");
+
+if(global.search.term !== "" && global.search.term !== null){
+  // @todo - make reques and display ressults
+  const results = await searchAPIData();
+  console.log(results)
+}else{
+  showAlert("Please enter a search item")
+}
+}
 
 //show slider movies
 async function displaySlider(){
@@ -287,6 +326,17 @@ function highlightActiveLink(){
    })
 }
 
+
+//show  alert
+function showAlert(message,className){
+  const alertEl= document.createElement("div");
+  alertEl.classList.add("alert", className);
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector("#alert").appendChild(alertEl);
+  setTimeout(()=>alertEl.remove(), 3000)
+}
+
+
 function addComasToNumber(number){
 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -308,7 +358,7 @@ function init(){
             displayShowDetails();
             break;
             case"/search.html":
-            console.log("Search");
+          search();
             break;
 
        default:
